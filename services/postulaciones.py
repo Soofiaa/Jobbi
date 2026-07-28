@@ -1,5 +1,5 @@
 from db.connection import get_client
-from datetime import date
+from datetime import date, datetime, timezone
 
 # ─────────────────────────────────────────
 # CREAR una nueva postulación
@@ -73,7 +73,10 @@ def editar_postulacion(id: int, puesto: str, empresa: str, portal: str = None,
         "descripcion":          descripcion,
         "estado":               estado,
         "notas":                notas,
-        "fecha_actualizacion":  "now()",
+        # Fix: "now()" se enviaba como texto literal, no como función SQL evaluada por Postgres.
+        # No se confirmó un trigger de Postgres/Supabase que la calcule automáticamente,
+        # así que se calcula acá.
+        "fecha_actualizacion":  datetime.now(timezone.utc).isoformat(),
         "fecha_postulacion":    fecha_postulacion or str(date.today())
     }
     response = client.table("postulaciones").update(data).eq("id", id).execute()
