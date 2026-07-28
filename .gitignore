@@ -2,3 +2,7 @@
 __pycache__/
 *.pyc
 .venv/
+build/
+dist/
+installer/
+*.exe
