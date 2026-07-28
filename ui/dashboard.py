@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from tkinter import messagebox
 from services.postulaciones import obtener_postulaciones, ESTADOS
 from ui.theme import COLORES
 
@@ -25,7 +26,12 @@ class Dashboard(ctk.CTkFrame):
         scroll.grid_columnconfigure((0, 1, 2, 3), weight=1)
 
         # Fix: sin orden_desc=True, "datos[:5]" tomaba las 5 más antiguas en vez de las últimas.
-        datos = obtener_postulaciones(orden_desc=True)
+        try:
+            datos = obtener_postulaciones(orden_desc=True)
+        except Exception as e:
+            messagebox.showerror("Error de conexión",
+                                  f"No se pudieron cargar los datos del dashboard.\n\n{e}")
+            datos = []
         total = len(datos)
 
         # Contar por estado

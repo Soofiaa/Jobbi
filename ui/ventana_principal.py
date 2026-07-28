@@ -491,10 +491,15 @@ class VentanaPrincipal(ctk.CTk):
                 notas              = campo_notas.get("1.0", "end").strip() or None,
                 fecha_postulacion  = fecha_db,
             )
-            if id_editar:
-                editar_postulacion(id=id_editar, **kwargs)
-            else:
-                crear_postulacion(**kwargs)
+            try:
+                if id_editar:
+                    editar_postulacion(id=id_editar, **kwargs)
+                else:
+                    crear_postulacion(**kwargs)
+            except Exception as e:
+                messagebox.showerror("Error de conexión",
+                                      f"No se pudo guardar la postulación.\n\n{e}")
+                return
             self.cargar_postulaciones()
             self._ocultar_panel()
 
@@ -527,9 +532,14 @@ class VentanaPrincipal(ctk.CTk):
             mes  = self._meses_clave[idx] if idx > 0 else "Todos"
         else:
             mes  = "Todos"
-        datos   = obtener_postulaciones(filtro_estado=estado, filtro_empresa=empresa,
-                                        orden_desc=self._orden_fecha, filtro_mes=mes)
-        self._actualizar_opciones_mes()
+        try:
+            datos = obtener_postulaciones(filtro_estado=estado, filtro_empresa=empresa,
+                                           orden_desc=self._orden_fecha, filtro_mes=mes)
+            self._actualizar_opciones_mes()
+        except Exception as e:
+            messagebox.showerror("Error de conexión",
+                                  f"No se pudieron cargar las postulaciones.\n\n{e}")
+            return
 
         for row in self.tabla.get_children():
             self.tabla.delete(row)
@@ -605,7 +615,12 @@ class VentanaPrincipal(ctk.CTk):
         if not messagebox.askyesno("Confirmar", f"¿Eliminar '{valores[0]}' en {valores[1]}?"):
             return
         if idx < len(self._ids_postulaciones):
-            eliminar_postulacion(self._ids_postulaciones[idx])
+            try:
+                eliminar_postulacion(self._ids_postulaciones[idx])
+            except Exception as e:
+                messagebox.showerror("Error de conexión",
+                                      f"No se pudo eliminar la postulación.\n\n{e}")
+                return
         self._ocultar_panel()
         self.cargar_postulaciones()
         
