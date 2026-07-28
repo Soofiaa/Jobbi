@@ -171,9 +171,10 @@ class VentanaPrincipal(ctk.CTk):
         self.filtro_estado.grid(row=10, column=0, padx=20, pady=(6, 16), sticky="ew")
 
         # Búsqueda empresa
+        # Fix: compartía row=7 con "FILTRAR POR MES", causando superposición visual.
         ctk.CTkLabel(sidebar, text="BUSCAR EMPRESA",
                      font=ctk.CTkFont(size=11, weight="bold"),
-                     text_color=COLORES["texto_sec"]).grid(row=7, column=0, padx=24, sticky="w")
+                     text_color=COLORES["texto_sec"]).grid(row=11, column=0, padx=24, sticky="w")
 
         self.filtro_empresa = ctk.CTkEntry(
             sidebar,
