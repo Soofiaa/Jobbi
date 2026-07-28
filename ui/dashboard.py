@@ -42,7 +42,8 @@ class Dashboard(ctk.CTkFrame):
         scroll.grid(row=1, column=0, sticky="nsew", padx=16, pady=(0, 16))
         scroll.grid_columnconfigure((0, 1, 2, 3), weight=1)
 
-        datos = obtener_postulaciones()
+        # Fix: sin orden_desc=True, "datos[:5]" tomaba las 5 más antiguas en vez de las últimas.
+        datos = obtener_postulaciones(orden_desc=True)
         total = len(datos)
 
         # Contar por estado
