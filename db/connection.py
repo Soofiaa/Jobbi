@@ -10,7 +10,9 @@ def _ruta_base():
         return os.path.dirname(sys.executable)
     else:
         # Ejecutando como script Python normal
-        return os.path.dirname(os.path.abspath(__file__))
+        # Fix: apuntaba a db/ (carpeta de este archivo) en vez de a la raíz del proyecto,
+        # donde vive el .env.
+        return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 _env_path = os.path.join(_ruta_base(), ".env")
 load_dotenv(dotenv_path=_env_path)
