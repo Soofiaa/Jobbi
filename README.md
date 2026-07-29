@@ -1,96 +1,161 @@
 # Jobbi
 
-Jobbi es una app de escritorio para llevar el registro de tus postulaciones
-laborales: dónde postulaste, en qué estado está cada proceso, cuándo
-aplicaste y qué notas dejaste sobre cada una. Pensada para uso personal,
-sin cuentas ni multiusuario.
+Aplicación de escritorio para llevar el registro de postulaciones laborales:
+puesto, empresa, portal, estado, notas y fechas, con dashboard de métricas y
+exportación a Excel.
 
-## Funcionalidades
+Construida en Python con interfaz nativa (CustomTkinter) y persistencia en
+Supabase (Postgres + REST), empaquetada como ejecutable de Windows con
+PyInstaller e instalador con Inno Setup.
 
-- Alta, edición y eliminación de postulaciones (puesto, empresa, portal,
-  URL del aviso, estado, fecha, descripción y notas).
-- Autodetección del portal (LinkedIn, Indeed, Get on Board, Bumeran,
-  Laborum, Glassdoor, Computrabajo, InfoJobs, Hired, Trabajando.com) a
-  partir de la URL pegada.
-- Filtros por estado, por mes y por nombre de empresa.
-- Dashboard con totales, postulaciones activas/ofertas/descartadas,
-  distribución por estado y las últimas postulaciones cargadas.
-- Exportación a Excel.
+---
+
+## Características
+
+- **Registro de postulaciones**: puesto, empresa, portal de origen (con
+  autodetección desde la URL), descripción, notas personales, estado y
+  fechas de postulación/actualización.
+- **Filtros combinables**: por estado, por empresa (búsqueda parcial) y por
+  mes de postulación.
+- **Dashboard**: totales por estado, postulaciones activas vs. descartadas,
+  gráfico de barras por estado y listado de las últimas postulaciones
+  registradas.
+- **Exportación a Excel** (`.xlsx`) de los datos filtrados, con ancho de
+  columnas autoajustado.
+- **Autodetección de portal** (LinkedIn, Indeed, Trabajando.com, Bumeran,
+  Get on Board, Laborum, Glassdoor, Computrabajo, InfoJobs, Hired) a partir
+  de la URL del aviso.
+- **Empaquetado standalone**: distribuible como `.exe` con instalador,
+  sin necesidad de tener Python instalado en el equipo destino.
+
+## Capturas de pantalla
+
+> _Agregar aquí 2-3 capturas: vista de lista de postulaciones, dashboard,
+> y formulario de nueva postulación._
 
 ## Stack técnico
 
-- **Python 3.13**
-- **CustomTkinter** — UI de escritorio
-- **Supabase** (Postgres + REST) — persistencia de datos
-- **pandas / openpyxl** — exportación a Excel
-- **PyInstaller** + **Inno Setup** — empaquetado del `.exe` e instalador
-  para Windows
-- **pytest / pytest-mock** — tests
+| Capa            | Tecnología                                  |
+|-----------------|----------------------------------------------|
+| UI              | Python, CustomTkinter, ttk (Treeview)         |
+| Backend/lógica  | Python (capa de servicios sobre el cliente Supabase) |
+| Persistencia    | Supabase (Postgres + REST vía `supabase-py`)  |
+| Exportación     | pandas, openpyxl                              |
+| Empaquetado     | PyInstaller (`.exe`) + Inno Setup (instalador) |
+| Tests           | pytest, mocks del cliente de Supabase         |
 
-## Instalación y configuración
+## Estructura del proyecto
 
-1. Cloná el repo y creá un entorno virtual:
+```
+Jobbi/
+├── main.py                    # Punto de entrada
+├── db/
+│   └── connection.py          # Cliente de Supabase y carga de variables de entorno
+├── services/
+│   └── postulaciones.py       # Lógica de negocio: CRUD y filtros sobre postulaciones
+├── ui/
+│   ├── ventana_principal.py   # Ventana principal, sidebar, tabla y panel lateral
+│   ├── dashboard.py           # Vista de métricas y gráfico por estado
+│   └── theme.py               # Paleta de colores unificada de la app
+├── utils/
+│   ├── portal_detector.py     # Detección de portal de empleo desde una URL
+│   └── exportar.py            # Exportación de postulaciones a Excel
+├── tests/                     # Suite de tests (pytest, con mocks de Supabase)
+├── requirements.txt            # Dependencias de producción
+├── requirements-dev.txt        # Dependencias de desarrollo (pytest, etc.)
+├── jobbi.spec                  # Configuración de PyInstaller
+└── jobbi_installer.iss         # Configuración de Inno Setup
+```
 
-   ```bash
-   python -m venv .venv
-   .venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+## Instalación (modo desarrollo)
 
-2. Copiá `.env.example` a `.env` y completá tus credenciales de Supabase:
+### 1. Clonar el repositorio
 
-   ```
-   SUPABASE_URL=https://tu-proyecto.supabase.co
-   SUPABASE_KEY=tu-anon-key
-   ```
+```bash
+git clone https://github.com/Soofiaa/Jobbi.git
+cd Jobbi
+```
 
-   El `.env` debe quedar en la raíz del proyecto. Nunca lo subas a git
-   (ya está en `.gitignore`).
+### 2. Crear entorno virtual e instalar dependencias
 
-## Modo desarrollo
+```bash
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # macOS/Linux
+
+pip install -r requirements.txt
+pip install -r requirements-dev.txt   # solo si vas a correr tests
+```
+
+### 3. Configurar variables de entorno
+
+Copia `.env.example` a `.env` en la raíz del proyecto y completa tus
+credenciales de Supabase:
+
+```
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_KEY=tu-anon-key
+```
+
+> **Importante:** usa siempre la **anon key** de Supabase, nunca la
+> `service_role key`, ya que esta aplicación se distribuye como ejecutable
+> y cualquier credencial embebida en ella puede ser extraída. Ver la
+> sección [Seguridad](#seguridad) más abajo.
+
+### 4. Ejecutar la aplicación
 
 ```bash
 python main.py
 ```
 
-`db/connection.py` detecta si corre como script o como `.exe` compilado
-(`sys.frozen`) y busca el `.env` en la raíz del proyecto en el primer
-caso, y junto al ejecutable en el segundo.
-
-## Generar el `.exe`
-
-```bash
-python build.py
-```
-
-Esto corre PyInstaller con `jobbi.spec` y copia el `.env` a
-`dist/Jobbi/.env` para que el ejecutable tenga sus credenciales. El
-instalador de Windows se genera aparte con Inno Setup a partir de
-`jobbi_installer.iss`. Ni `build/`, `dist/` ni `installer/` se versionan
-en git — son artefactos regenerables.
-
 ## Tests
 
+El proyecto cuenta con una suite de pytest que mockea el cliente de
+Supabase, por lo que corre sin conexión a internet ni credenciales reales.
+
 ```bash
-pip install -r requirements-dev.txt
 pytest -v
 ```
 
-La suite corre sin conexión a internet ni credenciales reales: las
-llamadas a Supabase están mockeadas (`tests/conftest.py`).
+Cobertura actual:
+- `tests/test_portal_detector.py`: detección de portal a partir de URLs
+  (casos válidos, sin protocolo, dominio no reconocido, URL vacía/`None`).
+- `tests/test_postulaciones.py`: creación, filtros combinados
+  (estado/empresa/mes), edición y eliminación de postulaciones.
 
-## Seguridad: tipo de key de Supabase
+## Generar el ejecutable
 
-`SUPABASE_KEY` es la **anon key** (se verificó decodificando el claim
-`role` del JWT), no la service_role key — es la que corresponde usar en
-un cliente distribuido, porque la service_role key tiene acceso total de
-lectura/escritura sin restricciones y cualquiera podría extraerla del
-`.exe`.
+```bash
+pyinstaller jobbi.spec
+```
 
-Dicho eso, la app no tiene login de usuario: se conecta directo con la
-anon key. La protección real depende entonces de las **políticas RLS**
-configuradas en la tabla `postulaciones` en el dashboard de Supabase, que
-no se pudo verificar de forma remota (solo hay credenciales REST en
-`.env`, no una conexión directa a Postgres). Si vas a distribuir el
-`.exe` más ampliamente, confirmá en Supabase → Authentication → Policies
-que RLS esté habilitado con políticas acotadas para esa tabla.
+Esto genera el ejecutable en `dist/Jobbi/`. Para crear el instalador de
+Windows, compila `jobbi_installer.iss` con [Inno Setup](https://jrsoftware.org/isinfo.php).
+
+> Los directorios `build/`, `dist/` e `installer/*.exe` no se versionan en
+> este repositorio (ver `.gitignore`); se generan localmente al ejecutar
+> los pasos anteriores.
+
+## Seguridad
+
+- La aplicación usa la **anon key** de Supabase (verificado decodificando
+  el JWT), no la `service_role key`.
+- La app no implementa autenticación de usuario, por lo que la protección
+  real de los datos depende de las **políticas de Row Level Security (RLS)**
+  configuradas en el proyecto de Supabase. **Pendiente de verificación
+  manual**: confirmar en el dashboard de Supabase (Authentication → Policies)
+  que las tablas tienen RLS habilitado con políticas restrictivas antes de
+  distribuir el instalador ampliamente.
+- Nunca subas tu archivo `.env` al repositorio (ya está excluido vía
+  `.gitignore`).
+
+## Roadmap / mejoras conocidas
+
+- [ ] `detectar_portal()` no reconoce URLs sin esquema (ej.
+      `www.linkedin.com/...` sin `https://`) — ver issue correspondiente.
+- [ ] Extraer manejo de errores de red a un decorador reutilizable en
+      lugar de `try/except` repetidos en la UI.
+
+## Autora
+
+Sofía Menzel — [GitHub](https://github.com/Soofiaa)
