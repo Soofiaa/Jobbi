@@ -28,11 +28,6 @@ PyInstaller e instalador con Inno Setup.
 - **Empaquetado standalone**: distribuible como `.exe` con instalador,
   sin necesidad de tener Python instalado en el equipo destino.
 
-## Capturas de pantalla
-
-> _Agregar aquí 2-3 capturas: vista de lista de postulaciones, dashboard,
-> y formulario de nueva postulación._
-
 ## Stack técnico
 
 | Capa            | Tecnología                                  |
